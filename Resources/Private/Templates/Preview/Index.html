@@ -1,0 +1,93 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" xmlns:c="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers" data-namespace-typo3-fluid="true">
+
+<f:if condition="{sitePreview}">
+	<f:be.infobox title="Preview URL for {sitePreview.language.title}" state="0" iconName="link">
+		<h4><strong>{sitePreview.previewUrl}</strong></h4>
+		<p>Copy the above URL. It allows viewing the disabled language without a backend login. The URL expires at
+			<f:format.date format="d.m.Y H:i" date="+ {sitePreview.lifetime} seconds"></f:format.date>.</p>
+	</f:be.infobox>
+</f:if>
+
+<h1>Generate a preview URL to a disabled language</h1>
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+	<f:for each="{sites}" as="site" iteration="i">
+		<div class="panel panel-default">
+			<div class="panel-heading" role="tab" id="heading{i.cycle}">
+				<h4 class="panel-title">
+					<a role="button"
+					   data-toggle="collapse"
+					   data-parent="#accordion"
+					   href="#collapse{i.cycle}"
+					   aria-expanded="true"
+					   aria-controls="collapse{i.cycle}">
+						<h4>Site <strong>{site.site.identifier}</strong>  - <em>{site.site.base}</em></h4>
+					</a>
+				</h4>
+			</div>
+			<div id="collapse{i.cycle}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading{i.cycle}">
+				<div class="panel-body">
+					<f:if condition="{site.disabledLanguages}">
+						<f:then>
+							<div class="card-container">
+								<f:for each="{site.disabledLanguages}" as="disabledLanguage" iteration="languageIterator">
+									<div class="card card-size-fixed-small">
+										<div class="card-header">
+											<div class="card-icon">
+												<c:icon identifier="{disabledLanguage.flagIdentifier}" />
+											</div>
+											<div class="card-header-body">
+												<h1 class="card-title">{disabledLanguage.title}</h1>
+												<span class="card-subtitle">{disabledLanguage.base}</span>
+											</div>
+										</div>
+
+										<div class="card-content">
+											<form action="{f:be.uri(route:'site_previews', parameters: {languageId: disabledLanguage.languageId, identifier: site.site.identifier})}"
+												  method="post"
+												  enctype="multipart/form-data"
+												  name="demand"
+												  class="form-inline form-inline-spaced">
+												<div class="form-group">
+													<p><label>URL Lifetime:</label><br /></p>
+												</div>
+												<div class="form-group">
+													<select class="form-control" name="lifetime[amount]">
+														<option value="1">1</option>
+														<option value="2">2</option>
+														<option value="3">3</option>
+														<option value="4">4</option>
+														<option value="5">5</option>
+														<option value="6">6</option>
+													</select>
+													<select class="form-control" name="lifetime[type]">
+														<option value="week">Week(s)</option>
+														<option value="day">Day(s)</option>
+													</select>
+												</div>
+												<br /><br />
+												<div class="form-group">
+													<button
+														type="submit"
+														class="btn btn-default">
+														<c:icon identifier="actions-view" />
+														Create Preview URL
+													</button>
+												</div>
+											</form>
+										</div>
+									</div>
+								</f:for>
+							</div>
+						</f:then>
+						<f:else>
+							<h4>No disabled Languages</h4>
+						</f:else>
+					</f:if>
+				</div>
+			</div>
+		</div>
+	</f:for>
+</div>
+
+</html>
