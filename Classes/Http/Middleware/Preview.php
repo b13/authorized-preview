@@ -37,16 +37,20 @@ class Preview implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $language = $request->getAttribute('language', null);
+
+        if (!$language instanceof SiteLanguage) {
+            return $handler->handle($request);
+        }
+
+        if ($language->isEnabled()) {
+            return $handler->handle($request);
+        }
+
         $hash = $this->findHashInRequest($request);
         if (empty($hash)) {
             return $handler->handle($request);
         }
-
-        $language = $request->getAttribute('language', null);
-        if ($language instanceof SiteLanguage && $language->isEnabled()) {
-            return $handler->handle($request);
-        }
-
 
         $context = GeneralUtility::makeInstance(Context::class);
         if (!$this->verifyHash($hash, $context, $language)) {
