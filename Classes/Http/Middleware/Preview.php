@@ -29,6 +29,22 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class Preview implements MiddlewareInterface
 {
+
+    /**
+     * @var Context
+     */
+    protected $context;
+
+    /**
+     * Preview constructor.
+     *
+     * @param Context|null $context
+     */
+    public function __construct(Context $context = null)
+    {
+        $this->context = $context ?? GeneralUtility::makeInstance(Context::class);
+    }
+
     /**
      *
      * @param ServerRequestInterface $request
@@ -37,8 +53,11 @@ class Preview implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $language = $request->getAttribute('language', null);
+        if ($this->context->getPropertyFromAspect('backend.user', 'isLoggedIn')) {
+            return $handler->handle($request);
+        }
 
+        $language = $request->getAttribute('language', null);
         if (!$language instanceof SiteLanguage) {
             return $handler->handle($request);
         }
@@ -52,8 +71,7 @@ class Preview implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        $context = GeneralUtility::makeInstance(Context::class);
-        if (!$this->verifyHash($hash, $context, $language)) {
+        if (!$this->verifyHash($hash, $language)) {
             return $handler->handle($request);
         }
 
@@ -64,11 +82,10 @@ class Preview implements MiddlewareInterface
         $previewUser = $this->initializePreviewUser();
         if ($previewUser) {
             $GLOBALS['BE_USER'] = $previewUser;
-            $this->setBackendUserAspect($context, $previewUser);
+            $this->setBackendUserAspect($previewUser);
         } else {
             return $handler->handle($request);
         }
-
         return $handler->handle($request);
     }
 
@@ -109,12 +126,14 @@ class Preview implements MiddlewareInterface
     /**
      * Register the backend user as aspect
      *
-     * @param Context $context
      * @param BackendUserAuthentication $user
      */
-    protected function setBackendUserAspect(Context $context, BackendUserAuthentication $user = null)
+    protected function setBackendUserAspect(BackendUserAuthentication $user = null)
     {
-        $context->setAspect('backend.user', GeneralUtility::makeInstance(UserAspect::class, $user));
+        $this->context->setAspect(
+            'backend.user',
+            GeneralUtility::makeInstance(UserAspect::class, $user)
+        );
     }
 
     /**
@@ -122,11 +141,10 @@ class Preview implements MiddlewareInterface
      * Must not be expired yet.
      *
      * @param string $hash
-     * @param Context $context
      * @param SiteLanguage $language
      * @return bool
      */
-    protected function verifyHash(string $hash, Context $context, SiteLanguage $language): bool
+    protected function verifyHash(string $hash, SiteLanguage $language): bool
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_authorized_preview');
@@ -140,7 +158,10 @@ class Preview implements MiddlewareInterface
                 ),
                 $queryBuilder->expr()->gt(
                     'endtime',
-                    $queryBuilder->createNamedParameter($context->getPropertyFromAspect('date', 'timestamp'), \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter(
+                        $this->context->getPropertyFromAspect('date', 'timestamp'),
+                        \PDO::PARAM_INT
+                    )
                 )
             )
             ->setMaxResults(1)
