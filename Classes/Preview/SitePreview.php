@@ -51,13 +51,6 @@ class SitePreview
      */
     protected $previewUrl = '';
 
-    /**
-     * SitePreview constructor.
-     *
-     * @param int $languageId
-     * @param string $identifier
-     * @param array $lifetime
-     */
     public function __construct(int $languageId, string $identifier, array $lifetime = [])
     {
         try {
@@ -74,45 +67,29 @@ class SitePreview
         }
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return SitePreview
-     */
     public static function createFromRequest(ServerRequestInterface $request): SitePreview
     {
-        $languageId = (int)$request->getQueryParams()['languageId'] ?? $request->getParsedBody()['languageId'] ?? -1;
+        $languageId = (int)($request->getQueryParams()['languageId'] ?? $request->getParsedBody()['languageId'] ?? -1);
         $identifier = $request->getQueryParams()['identifier'] ?? $request->getParsedBody()['identifier'] ?? '';
         $lifetime = $request->getQueryParams()['lifetime'] ?? $request->getParsedBody()['lifetime'] ?? [];
         return new self($languageId, $identifier, $lifetime);
     }
 
-    /**
-     * @return SiteLanguage
-     */
     public function getLanguage(): SiteLanguage
     {
         return $this->site->getLanguageById($this->languageId);
     }
 
-    /**
-     * @return Site
-     */
     public function getSite(): Site
     {
         return $this->site;
     }
 
-    /**
-     * @return int
-     */
     public function getLifetime(): int
     {
         return $this->lifeTime;
     }
 
-    /**
-     * @return string
-     */
     public function getPreviewUrl(): string
     {
         if (empty($this->previewUrl)) {
@@ -121,27 +98,17 @@ class SitePreview
         return $this->previewUrl;
     }
 
-    /**
-     * @return bool
-     */
     public function isValid(): bool
     {
         return $this->valid;
     }
 
-    /**
-     * @return void
-     */
-    protected function generatePreviewUrl()
+    protected function generatePreviewUrl(): void
     {
         $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl();
     }
 
-    /**
-     * @param array $lifetime
-     * @return void
-     */
-    protected function calculateLifetime(array $lifetime)
+    protected function calculateLifetime(array $lifetime): void
     {
         if (empty($lifetime)) {
             return;

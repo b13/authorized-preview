@@ -29,8 +29,6 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
 class PreviewController
 {
     /**
-     * ModuleTemplate object
-     *
      * @var ModuleTemplate
      */
     protected $moduleTemplate;
@@ -51,29 +49,25 @@ class PreviewController
     protected $iconFactory;
 
     /**
-     * Instantiate the form protection before a simulated user is initialized.
+     * @var SiteFinder
      */
-    public function __construct()
+    protected $siteFinder;
+
+    public function __construct(ModuleTemplate $moduleTemplate = null, IconFactory $iconFactory = null, SiteFinder $siteFinder = null)
     {
-        $this->moduleTemplate = GeneralUtility::makeInstance(ModuleTemplate::class);
-        $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
+        $this->moduleTemplate = $moduleTemplate ?? GeneralUtility::makeInstance(ModuleTemplate::class);
+        $this->iconFactory = $iconFactory ?? GeneralUtility::makeInstance(IconFactory::class);
+        $this->siteFinder = $siteFinder ?? GeneralUtility::makeInstance(SiteFinder::class);
         $this->initializeView('index');
     }
 
-    /**
-     * @param string $templateName
-     */
-    protected function initializeView(string $templateName)
+    protected function initializeView(string $templateName): void
     {
         $this->view = GeneralUtility::makeInstance(StandaloneView::class);
         $this->view->setTemplate($templateName);
         $this->view->setTemplateRootPaths(['EXT:authorized_preview/Resources/Private/Templates/Preview']);
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface the response with the content
-     */
     public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
         $this->view->assign('sites', $this->getAllSites());
@@ -92,14 +86,16 @@ class PreviewController
      */
     protected function getAllSites(): array
     {
-        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
         $sites = [];
-        foreach ($siteFinder->getAllSites() as $site) {
+        foreach ($this->siteFinder->getAllSites() as $site) {
             if (!($site instanceof Site)) {
                 continue;
             }
             $sites[] = GeneralUtility::makeInstance(SiteWrapper::class, $site);
         }
+        usort($sites, function (SiteWrapper $siteA, SiteWrapper $siteB) {
+            return $siteA->getCountDisabledLanguages() < $siteB->getCountDisabledLanguages();
+        });
         return $sites;
     }
 }

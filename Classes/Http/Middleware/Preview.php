@@ -29,28 +29,16 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class Preview implements MiddlewareInterface
 {
-
     /**
      * @var Context
      */
     protected $context;
 
-    /**
-     * Preview constructor.
-     *
-     * @param Context|null $context
-     */
     public function __construct(Context $context = null)
     {
         $this->context = $context ?? GeneralUtility::makeInstance(Context::class);
     }
 
-    /**
-     *
-     * @param ServerRequestInterface $request
-     * @param RequestHandlerInterface $handler
-     * @return ResponseInterface
-     */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if ($this->context->getPropertyFromAspect('backend.user', 'isLoggedIn')) {
@@ -79,13 +67,9 @@ class Preview implements MiddlewareInterface
         if ($request->getQueryParams()[PreviewUriBuilder::PARAMETER_NAME] ?? false) {
             $this->setCookie($hash, $request->getAttribute('normalizedParams'));
         }
-        $previewUser = $this->initializePreviewUser();
-        if ($previewUser) {
-            $GLOBALS['BE_USER'] = $previewUser;
-            $this->setBackendUserAspect($previewUser);
-        } else {
-            return $handler->handle($request);
-        }
+
+        $this->initializePreviewUser($language);
+
         return $handler->handle($request);
     }
 
@@ -100,35 +84,26 @@ class Preview implements MiddlewareInterface
         return $request->getQueryParams()[PreviewUriBuilder::PARAMETER_NAME] ?? $request->getCookieParams()[PreviewUriBuilder::PARAMETER_NAME] ?? '';
     }
 
-    /**
-     * Sets a cookie
-     *
-     * @param string $inputCode
-     * @param NormalizedParams $normalizedParams
-     */
-    protected function setCookie(string $inputCode, NormalizedParams $normalizedParams)
+    protected function setCookie(string $inputCode, NormalizedParams $normalizedParams): void
     {
         setcookie(PreviewUriBuilder::PARAMETER_NAME, $inputCode, 0, $normalizedParams->getSitePath(), '', true, true);
     }
 
     /**
      * Creates a preview user and sets the current page ID (for accessing the page)
-     *
-     * @return PreviewUserAuthentication
      */
-    protected function initializePreviewUser()
+    protected function initializePreviewUser(SiteLanguage $language): void
     {
-        $previewUser = GeneralUtility::makeInstance(PreviewUserAuthentication::class);
+        $previewUser = GeneralUtility::makeInstance(PreviewUserAuthentication::class, $language);
         $previewUser->setWebmounts([$GLOBALS['TSFE']->id]);
-        return $previewUser;
+        $GLOBALS['BE_USER'] = $previewUser;
+        $this->setBackendUserAspect($previewUser);
     }
 
     /**
      * Register the backend user as aspect
-     *
-     * @param BackendUserAuthentication $user
      */
-    protected function setBackendUserAspect(BackendUserAuthentication $user = null)
+    protected function setBackendUserAspect(BackendUserAuthentication $user = null): void
     {
         $this->context->setAspect(
             'backend.user',
@@ -137,12 +112,8 @@ class Preview implements MiddlewareInterface
     }
 
     /**
-     * Looks for the hash in the tx_authorized_preview
+     * Looks for the hash in the table tx_authorized_preview
      * Must not be expired yet.
-     *
-     * @param string $hash
-     * @param SiteLanguage $language
-     * @return bool
      */
     protected function verifyHash(string $hash, SiteLanguage $language): bool
     {

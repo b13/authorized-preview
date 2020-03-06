@@ -26,13 +26,19 @@ class SiteWrapper
     protected $site = null;
 
     /**
-     * SitePreview constructor.
-     *
-     * @param Site $site
+     * @var SiteLanguage[]
      */
+    protected $disabledLanguages = [];
+
     public function __construct(Site $site)
     {
         $this->site = $site;
+
+        foreach ($this->site->getAllLanguages() as $languageId => $language) {
+            if ($language->enabled() === false) {
+                $this->disabledLanguages[] = $language;
+            }
+        }
     }
 
     /**
@@ -40,18 +46,14 @@ class SiteWrapper
      */
     public function getDisabledLanguages(): array
     {
-        $languages = [];
-        foreach ($this->site->getAllLanguages() as $languageId => $language) {
-            if ($language->enabled() === false) {
-                $languages[] = $language;
-            }
-        }
-        return $languages;
+        return $this->disabledLanguages;
     }
 
-    /**
-     * @return Site
-     */
+    public function getCountDisabledLanguages(): int
+    {
+        return count($this->disabledLanguages);
+    }
+
     public function getSite(): Site
     {
         return $this->site;

@@ -21,22 +21,16 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
  */
 class PreviewUserAuthentication extends BackendUserAuthentication
 {
-
     /**
      * @var SiteLanguage
      */
-    protected $siteLanguage = null;
+    protected $siteLanguage;
 
-    /**
-     * PreviewUserAuthentication constructor.
-     *
-     * @param SiteLanguage|null $siteLanguage
-     */
-    public function __construct(SiteLanguage $siteLanguage = null)
+    public function __construct(SiteLanguage $siteLanguage)
     {
         parent::__construct();
         $this->name = PreviewUriBuilder::PARAMETER_NAME;
-        $this->siteLanguage = $siteLanguage ?? $GLOBALS['TYPO3_REQUEST']->getAttribute('language', null);
+        $this->siteLanguage = $siteLanguage;
     }
 
     /**
@@ -45,7 +39,7 @@ class PreviewUserAuthentication extends BackendUserAuthentication
      * @param int $perms
      * @return string
      */
-    public function getPagePermsClause($perms)
+    public function getPagePermsClause($perms): string
     {
         if ($perms === Permission::PAGE_SHOW) {
             return '1=1';
@@ -59,7 +53,7 @@ class PreviewUserAuthentication extends BackendUserAuthentication
      * @param array $row
      * @return int
      */
-    public function calcPerms($row)
+    public function calcPerms($row): int
     {
         return Permission::PAGE_SHOW;
     }
@@ -70,7 +64,7 @@ class PreviewUserAuthentication extends BackendUserAuthentication
      * @param int $langValue
      * @return bool
      */
-    public function checkLanguageAccess($langValue)
+    public function checkLanguageAccess($langValue): bool
     {
         if ($this->siteLanguage === null) {
             return false;

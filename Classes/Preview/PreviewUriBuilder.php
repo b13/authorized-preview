@@ -16,13 +16,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class PreviewUriBuilder
 {
-
-    const PARAMETER_NAME = 'tx_authorized_preview';
+    public const PARAMETER_NAME = 'tx_authorized_preview';
 
     /**
      * @var SitePreview
      */
-    protected $sitePreview = null;
+    protected $sitePreview;
 
     /**
      * @var string
@@ -34,30 +33,19 @@ class PreviewUriBuilder
      */
     protected $hash = '';
 
-    /**
-     * PreviewUriBuilder constructor.
-     *
-     * @param SitePreview $sitePreview
-     */
     public function __construct(SitePreview $sitePreview)
     {
         $this->sitePreview = $sitePreview;
         $this->hash = md5(uniqid(microtime(), true));
     }
 
-    /**
-     * @return string
-     */
     public function generatePreviewUrl(): string
     {
         $this->storeInDatabase();
         return rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/?' . self::PARAMETER_NAME . '=' . $this->hash;
     }
 
-    /**
-     * @return void
-     */
-    protected function storeInDatabase()
+    protected function storeInDatabase(): void
     {
         $context = GeneralUtility::makeInstance(Context::class);
         GeneralUtility::makeInstance(ConnectionPool::class)
