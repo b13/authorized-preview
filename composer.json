@@ -3,7 +3,7 @@
 	"type": "typo3-cms-extension",
 	"description": "Generate URLs to preview hidden languages without a backend login",
 	"require": {
-		"typo3/cms-core": "^9.5"
+		"typo3/cms-core": "^9.5 || ^10.3"
 	},
 	"replace": {
 		"authorized_preview": "self.version"
