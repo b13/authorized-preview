@@ -5,7 +5,7 @@ through generated preview URLs without the need for a backend login.
 
 ## Requirements
 
-* TYPO3 9 LTS
+* TYPO3 9 LTS as well as TYPO3 10.3 or higher
 * Site Configuration(s)
 
 ## Installation and Setup
