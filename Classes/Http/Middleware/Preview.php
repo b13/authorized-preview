@@ -80,7 +80,7 @@ class Preview implements MiddlewareInterface
             $this->setCookie($hash, $request->getAttribute('normalizedParams'));
         }
 
-        $this->initializePreviewUser();
+        $this->initializePreviewUser($language);
 
         return $handler->handle($request);
     }
@@ -110,9 +110,9 @@ class Preview implements MiddlewareInterface
     /**
      * Creates a preview user and sets the current page ID (for accessing the page)
      */
-    protected function initializePreviewUser(): void
+    protected function initializePreviewUser(SiteLanguage $language): void
     {
-        $previewUser = GeneralUtility::makeInstance(PreviewUserAuthentication::class);
+        $previewUser = GeneralUtility::makeInstance(PreviewUserAuthentication::class, $language);
         $previewUser->setWebmounts([$GLOBALS['TSFE']->id]);
         $GLOBALS['BE_USER'] = $previewUser;
         $this->setBackendUserAspect($previewUser);
