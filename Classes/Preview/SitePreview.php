@@ -80,7 +80,7 @@ class SitePreview
      */
     public static function createFromRequest(ServerRequestInterface $request): SitePreview
     {
-        $languageId = (int)$request->getQueryParams()['languageId'] ?? $request->getParsedBody()['languageId'] ?? -1;
+        $languageId = (int)($request->getQueryParams()['languageId'] ?? $request->getParsedBody()['languageId'] ?? -1);
         $identifier = $request->getQueryParams()['identifier'] ?? $request->getParsedBody()['identifier'] ?? '';
         $lifetime = $request->getQueryParams()['lifetime'] ?? $request->getParsedBody()['lifetime'] ?? [];
         return new self($languageId, $identifier, $lifetime);

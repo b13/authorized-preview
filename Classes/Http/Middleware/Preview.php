@@ -79,13 +79,9 @@ class Preview implements MiddlewareInterface
         if ($request->getQueryParams()[PreviewUriBuilder::PARAMETER_NAME] ?? false) {
             $this->setCookie($hash, $request->getAttribute('normalizedParams'));
         }
-        $previewUser = $this->initializePreviewUser();
-        if ($previewUser) {
-            $GLOBALS['BE_USER'] = $previewUser;
-            $this->setBackendUserAspect($previewUser);
-        } else {
-            return $handler->handle($request);
-        }
+
+        $this->initializePreviewUser();
+
         return $handler->handle($request);
     }
 
@@ -106,21 +102,20 @@ class Preview implements MiddlewareInterface
      * @param string $inputCode
      * @param NormalizedParams $normalizedParams
      */
-    protected function setCookie(string $inputCode, NormalizedParams $normalizedParams)
+    protected function setCookie(string $inputCode, NormalizedParams $normalizedParams): void
     {
         setcookie(PreviewUriBuilder::PARAMETER_NAME, $inputCode, 0, $normalizedParams->getSitePath(), '', true, true);
     }
 
     /**
      * Creates a preview user and sets the current page ID (for accessing the page)
-     *
-     * @return PreviewUserAuthentication
      */
-    protected function initializePreviewUser()
+    protected function initializePreviewUser(): void
     {
         $previewUser = GeneralUtility::makeInstance(PreviewUserAuthentication::class);
         $previewUser->setWebmounts([$GLOBALS['TSFE']->id]);
-        return $previewUser;
+        $GLOBALS['BE_USER'] = $previewUser;
+        $this->setBackendUserAspect($previewUser);
     }
 
     /**
@@ -128,7 +123,7 @@ class Preview implements MiddlewareInterface
      *
      * @param BackendUserAuthentication $user
      */
-    protected function setBackendUserAspect(BackendUserAuthentication $user = null)
+    protected function setBackendUserAspect(BackendUserAuthentication $user = null): void
     {
         $this->context->setAspect(
             'backend.user',

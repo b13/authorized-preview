@@ -63,7 +63,7 @@ class PreviewController
     /**
      * @param string $templateName
      */
-    protected function initializeView(string $templateName)
+    protected function initializeView(string $templateName): void
     {
         $this->view = GeneralUtility::makeInstance(StandaloneView::class);
         $this->view->setTemplate($templateName);
