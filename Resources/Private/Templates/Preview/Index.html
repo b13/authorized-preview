@@ -12,7 +12,7 @@
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
 	<f:for each="{sites}" as="site" iteration="i">
-		<div class="panel panel-default">
+		<div class="panel {f:if(condition:site.countDisabledLanguages, then:'panel-info', else: 'panel-default')}">
 			<div class="panel-heading" role="tab" id="heading{i.cycle}">
 				<h4 class="panel-title">
 					<a role="button"
@@ -21,13 +21,17 @@
 					   href="#collapse{i.cycle}"
 					   aria-expanded="true"
 					   aria-controls="collapse{i.cycle}">
-						<h4>Site <strong>{site.site.identifier}</strong>  - <em>{site.site.base}</em></h4>
+						<h4>Site <strong>{site.site.base.host}</strong>  (<em>{site.site.identifier -> f:format.crop(maxCharacters:20)}</em>) <span class="pull-right"><sub>{site.countDisabledLanguages} disabled Language{f:if(condition:'{site.countDisabledLanguages} == 1', else: 's')}</sub></span></h4>
 					</a>
 				</h4>
 			</div>
-			<div id="collapse{i.cycle}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading{i.cycle}">
+			<div id="collapse{i.cycle}"
+				 class="panel-collapse collapse {f:if(condition:site.countDisabledLanguages, then:'in')}"
+				 role="tabpanel"
+				 aria-labelledby="heading{i.cycle}"
+				 aria-expanded="{f:if(condition:site.countDisabledLanguages, then:'true', else: 'false')}">
 				<div class="panel-body">
-					<f:if condition="{site.disabledLanguages}">
+					<f:if condition="{site.countDisabledLanguages}">
 						<f:then>
 							<div class="card-container">
 								<f:for each="{site.disabledLanguages}" as="disabledLanguage" iteration="languageIterator">
