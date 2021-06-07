@@ -2,6 +2,7 @@
 	"name": "b13/authorized-preview",
 	"type": "typo3-cms-extension",
 	"description": "Generate URLs to preview hidden languages without a backend login",
+	"license": ["GPL-2.0-or-later"],
 	"require": {
 		"typo3/cms-core": "^9.5 || ^10.3 || ^11.0"
 	},
