@@ -12,6 +12,18 @@
 			<trans-unit id="mlang_tabs_tab">
 				<source>Preview</source>
 			</trans-unit>
+			<trans-unit id="generate_preview_url">
+				<source>Generate Preview URL</source>
+			</trans-unit>
+			<trans-unit id="generate_preview_url.message.error">
+				<source>Preview URL could not be generated.</source>
+			</trans-unit>
+			<trans-unit id="generate_preview_url.message.success">
+				<source>Please copy this URL for preview:</source>
+			</trans-unit>
+			<trans-unit id="generate_preview_url.message.title">
+				<source>Authorized Preview</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

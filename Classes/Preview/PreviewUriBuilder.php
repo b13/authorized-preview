@@ -10,6 +10,7 @@ namespace B13\AuthorizedPreview\Preview;
  * of the License, or any later version.
  */
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -42,12 +43,28 @@ class PreviewUriBuilder
     public function generatePreviewUrl(): string
     {
         $this->storeInDatabase();
-        return rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/?' . self::PARAMETER_NAME . '=' . $this->hash;
+        if ($this->sitePreview->getPageUid() > 0) {
+            $previewBase = BackendUtility::getPreviewUrl(
+                $this->sitePreview->getPageUid(),
+                '',
+                BackendUtility::BEgetRootLine($this->sitePreview->getPageUid()),
+                '',
+                '',
+                '&L=' . $this->sitePreview->getLanguage()->getLanguageId()
+            );
+        } else {
+            $previewBase = rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/';
+        }
+        return  $previewBase . '?' . self::PARAMETER_NAME . '=' . $this->hash;
     }
 
     protected function storeInDatabase(): void
     {
         $context = GeneralUtility::makeInstance(Context::class);
+        $config = [];
+        if ($this->sitePreview->getPageUid() > 0) {
+            $config['pageUid'] = $this->sitePreview->getPageUid();
+        }
         GeneralUtility::makeInstance(ConnectionPool::class)
             ->getConnectionForTable('tx_authorized_preview')
             ->insert(
@@ -56,9 +73,9 @@ class PreviewUriBuilder
                     'hash' => $this->hash,
                     'tstamp' => $context->getPropertyFromAspect('date', 'timestamp'),
                     'endtime' => $context->getPropertyFromAspect('date', 'timestamp') + $this->sitePreview->getLifetime(),
-                    'config' => json_encode([
+                    'config' => json_encode(array_merge($config,[
                         'languageId' => $this->sitePreview->getLanguage()->getLanguageId(),
-                    ])
+                    ]))
                 ]
             );
     }

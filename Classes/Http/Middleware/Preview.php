@@ -50,11 +50,11 @@ class Preview implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        if ($language->isEnabled()) {
+        $hash = $this->findHashInRequest($request);
+        if (empty($hash) && $language->isEnabled()) {
             return $handler->handle($request);
         }
 
-        $hash = $this->findHashInRequest($request);
         if (empty($hash)) {
             return $handler->handle($request);
         }
