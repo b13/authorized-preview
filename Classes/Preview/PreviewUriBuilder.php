@@ -57,6 +57,7 @@ class PreviewUriBuilder
                     'tstamp' => $context->getPropertyFromAspect('date', 'timestamp'),
                     'endtime' => $context->getPropertyFromAspect('date', 'timestamp') + $this->sitePreview->getLifetime(),
                     'config' => json_encode([
+                        'siteIdentifier' => $this->sitePreview->getSite()->getIdentifier(),
                         'languageId' => $this->sitePreview->getLanguage()->getLanguageId(),
                     ])
                 ]
