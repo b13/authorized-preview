@@ -31,6 +31,13 @@ class SitePreview
     protected $site = null;
 
     /**
+     * The page UID for the Preview URL
+     *
+     * @var int
+     */
+    protected $pageUid = 0;
+
+    /**
      * The language ID for the Preview URL
      *
      * @var int
@@ -51,7 +58,7 @@ class SitePreview
      */
     protected $previewUrl = '';
 
-    public function __construct(int $languageId, string $identifier, array $lifetime = [])
+    public function __construct(int $languageId, string $identifier, array $lifetime = [], int $pageUid = 0)
     {
         try {
             $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByIdentifier($identifier);
@@ -60,6 +67,9 @@ class SitePreview
                 $this->site = $site;
                 $this->calculateLifetime($lifetime);
                 $this->generatePreviewUrl();
+                if ($pageUid > 0) {
+                    $this->pageUid = $pageUid;
+                }
                 $this->valid = true;
             }
         } catch (SiteNotFoundException $e) {
@@ -78,6 +88,14 @@ class SitePreview
     public function getLanguage(): SiteLanguage
     {
         return $this->site->getLanguageById($this->languageId);
+    }
+
+    /**
+     * @return int
+     */
+    public function getPageUid(): int
+    {
+        return $this->pageUid;
     }
 
     public function getSite(): Site
@@ -105,7 +123,9 @@ class SitePreview
 
     protected function generatePreviewUrl(): void
     {
-        $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl();
+        if ($this->isValid()) {
+            $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl();
+        }
     }
 
     protected function calculateLifetime(array $lifetime): void
