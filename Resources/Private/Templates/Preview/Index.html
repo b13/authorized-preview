@@ -1,7 +1,7 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" xmlns:c="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers" data-namespace-typo3-fluid="true">
 
 <f:if condition="{sitePreview}">
-	<f:be.infobox title="Preview URL for {sitePreview.language.title}" state="0" iconName="link">
+	<f:be.infobox title="Created preview URL for {sitePreview.language.title} on {sitePreview.site.base.host}" state="0" iconName="link">
 		<h4><strong>{sitePreview.previewUrl}</strong></h4>
 		<p>Copy the above URL. It allows viewing the disabled language without a backend login. The URL expires at
 			<f:format.date format="d.m.Y H:i" date="+ {sitePreview.lifetime} seconds"></f:format.date>.</p>

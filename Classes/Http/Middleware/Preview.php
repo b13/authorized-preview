@@ -21,6 +21,7 @@ use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\UserAspect;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\NormalizedParams;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -45,7 +46,12 @@ class Preview implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        $language = $request->getAttribute('language', null);
+        $site = $request->getAttribute('site');
+        if (!$site instanceof Site) {
+            return $handler->handle($request);
+        }
+
+        $language = $request->getAttribute('language');
         if (!$language instanceof SiteLanguage) {
             return $handler->handle($request);
         }
@@ -59,7 +65,7 @@ class Preview implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        if (!$this->verifyHash($hash, $language)) {
+        if (!$this->verifyHash($hash, $language, $site)) {
             return $handler->handle($request);
         }
 
@@ -115,7 +121,7 @@ class Preview implements MiddlewareInterface
      * Looks for the hash in the table tx_authorized_preview
      * Must not be expired yet.
      */
-    protected function verifyHash(string $hash, SiteLanguage $language): bool
+    protected function verifyHash(string $hash, SiteLanguage $language, Site $site): bool
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_authorized_preview');
@@ -144,6 +150,7 @@ class Preview implements MiddlewareInterface
         }
 
         $config = json_decode($row['config'], true);
-        return (int)$config['languageId'] === $language->getLanguageId();
+        return (int)$config['languageId'] === $language->getLanguageId()
+            && (!isset($config['siteIdentifier']) || (string)$config['siteIdentifier'] === $site->getIdentifier());
     }
 }
