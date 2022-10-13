@@ -17,47 +17,21 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Core\Http\HtmlResponse;
-use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
-/**
- * Class PreviewController
- */
 class PreviewController
 {
-    /**
-     * @var ModuleTemplate
-     */
-    protected $moduleTemplate;
+    protected ModuleTemplate $moduleTemplate;
+    protected StandaloneView $view;
+    protected SiteFinder $siteFinder;
 
-    /**
-     * @var StandaloneView
-     */
-    protected $view;
-
-    /**
-     * @var ServerRequestInterface
-     */
-    protected $request;
-
-    /**
-     * @var IconFactory
-     */
-    protected $iconFactory;
-
-    /**
-     * @var SiteFinder
-     */
-    protected $siteFinder;
-
-    public function __construct(ModuleTemplate $moduleTemplate = null, IconFactory $iconFactory = null, SiteFinder $siteFinder = null)
+    public function __construct(ModuleTemplate $moduleTemplate, SiteFinder $siteFinder)
     {
-        $this->moduleTemplate = $moduleTemplate ?? GeneralUtility::makeInstance(ModuleTemplate::class);
-        $this->iconFactory = $iconFactory ?? GeneralUtility::makeInstance(IconFactory::class);
-        $this->siteFinder = $siteFinder ?? GeneralUtility::makeInstance(SiteFinder::class);
+        $this->moduleTemplate = $moduleTemplate;
+        $this->siteFinder = $siteFinder;
         $this->initializeView('index');
     }
 
@@ -82,7 +56,7 @@ class PreviewController
     }
 
     /**
-     * @return Site[]
+     * @return SiteWrapper[]
      */
     protected function getAllSites(): array
     {

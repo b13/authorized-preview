@@ -20,36 +20,17 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 
 class SitePreview
 {
-    /**
-     * @var bool
-     */
-    protected $valid = false;
+    protected bool $valid = false;
+    protected ?Site $site = null;
 
-    /**
-     * @var Site
-     */
-    protected $site = null;
+    /** The language ID for the Preview URL */
+    protected int $languageId = -1;
 
-    /**
-     * The language ID for the Preview URL
-     *
-     * @var int
-     */
-    protected $languageId = -1;
+    /** Time until the preview URl expires */
+    protected int $lifeTime = 604800;
 
-    /**
-     * Time until the preview URl expires
-     *
-     * @var int
-     */
-    protected $lifeTime = 604800;
-
-    /**
-     * The final preview URL
-     *
-     * @var string
-     */
-    protected $previewUrl = '';
+    /** The final preview URL */
+    protected string $previewUrl = '';
 
     public function __construct(int $languageId, string $identifier, array $lifetime = [])
     {
