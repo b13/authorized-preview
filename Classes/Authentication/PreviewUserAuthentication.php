@@ -21,10 +21,7 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
  */
 class PreviewUserAuthentication extends BackendUserAuthentication
 {
-    /**
-     * @var SiteLanguage
-     */
-    protected $siteLanguage;
+    protected SiteLanguage $siteLanguage;
 
     public function __construct(SiteLanguage $siteLanguage)
     {
@@ -66,9 +63,6 @@ class PreviewUserAuthentication extends BackendUserAuthentication
      */
     public function checkLanguageAccess($langValue): bool
     {
-        if ($this->siteLanguage === null) {
-            return false;
-        }
         return (int)$langValue === $this->siteLanguage->getLanguageId();
     }
 }

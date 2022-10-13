@@ -18,20 +18,9 @@ class PreviewUriBuilder
 {
     public const PARAMETER_NAME = 'tx_authorized_preview';
 
-    /**
-     * @var SitePreview
-     */
-    protected $sitePreview;
-
-    /**
-     * @var string
-     */
-    protected $uri = '';
-
-    /**
-     * @var string
-     */
-    protected $hash = '';
+    protected SitePreview $sitePreview;
+    protected string $uri = '';
+    protected string $hash = '';
 
     public function __construct(SitePreview $sitePreview)
     {

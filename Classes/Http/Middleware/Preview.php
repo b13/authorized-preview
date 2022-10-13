@@ -16,6 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Symfony\Component\HttpFoundation\Cookie;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\UserAspect;
@@ -30,14 +31,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class Preview implements MiddlewareInterface
 {
-    /**
-     * @var Context
-     */
-    protected $context;
+    protected Context $context;
 
-    public function __construct(Context $context = null)
+    public function __construct(Context $context)
     {
-        $this->context = $context ?? GeneralUtility::makeInstance(Context::class);
+        $this->context = $context;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -68,31 +66,33 @@ class Preview implements MiddlewareInterface
         if (!$this->verifyHash($hash, $language, $site)) {
             return $handler->handle($request);
         }
+        $this->initializePreviewUser($language);
+        $response = $handler->handle($request);
 
         // If the GET parameter PreviewUriBuilder::PARAMETER_NAME is set, then a cookie is set for the next request
         if ($request->getQueryParams()[PreviewUriBuilder::PARAMETER_NAME] ?? false) {
-            $this->setCookie($hash, $request->getAttribute('normalizedParams'));
+            /** @var NormalizedParams $normalizedParams */
+            $normalizedParams = $request->getAttribute('normalizedParams');
+            $cookie = new Cookie(
+                PreviewUriBuilder::PARAMETER_NAME,
+                $hash,
+                0,
+                $normalizedParams->getSitePath(),
+                '',
+                true,
+                true
+            );
+            return $response->withAddedHeader('Set-Cookie', $cookie->__toString());
         }
-
-        $this->initializePreviewUser($language);
-
-        return $handler->handle($request);
+        return $response;
     }
 
     /**
      * Looks for the PreviewUriBuilder::PARAMETER_NAME in the QueryParams and Cookies
-     *
-     * @param ServerRequestInterface $request
-     * @return string
      */
     protected function findHashInRequest(ServerRequestInterface $request): string
     {
         return $request->getQueryParams()[PreviewUriBuilder::PARAMETER_NAME] ?? $request->getCookieParams()[PreviewUriBuilder::PARAMETER_NAME] ?? '';
-    }
-
-    protected function setCookie(string $inputCode, NormalizedParams $normalizedParams): void
-    {
-        setcookie(PreviewUriBuilder::PARAMETER_NAME, $inputCode, 0, $normalizedParams->getSitePath(), '', true, true);
     }
 
     /**

@@ -5,8 +5,7 @@ through generated preview URLs without the need for a backend login.
 
 ## Requirements
 
-* TYPO3 9 LTS as well as TYPO3 10.3 or higher
-* Site Configuration(s)
+* TYPO3 v10 LTS or TYPO3 v11 LTS
 
 ## Installation and Setup
 Install the extension via your preferred way. The extension will add one database table to the database.
@@ -14,8 +13,8 @@ No further setup is required. The extension works out of the box.
 
 ## What is does
 The extension adds a backend module called "Preview". The module lists all disabled languages
-(show in frontend = 0) for each Site. For each disabled language a lifetime can be configured and a
-preview URL can be generated that can then be send to colleagues (e.g. for proof reading).
+("Show in frontend" = false) for each Site. For each disabled language a lifetime can be configured and a
+preview URL can be generated, that can then be sent to colleagues (e.g. for proof reading).
 
 Within their lifetime the preview URLs enable access to a disabled language without a backend login.
 For any other website visitor the disabled languages is still not accessible.

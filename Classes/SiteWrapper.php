@@ -20,15 +20,12 @@ use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
  */
 class SiteWrapper
 {
-    /**
-     * @var Site
-     */
-    protected $site = null;
+    protected Site $site;
 
     /**
      * @var SiteLanguage[]
      */
-    protected $disabledLanguages = [];
+    protected array $disabledLanguages = [];
 
     public function __construct(Site $site)
     {
