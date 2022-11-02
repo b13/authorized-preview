@@ -13,6 +13,7 @@ namespace B13\AuthorizedPreview\Preview;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Routing\RouterInterface;
 
 class PreviewUriBuilder
 {
@@ -28,10 +29,15 @@ class PreviewUriBuilder
         $this->hash = md5(uniqid(microtime(), true));
     }
 
-    public function generatePreviewUrl(): string
+    public function generatePreviewUrl(?int $pageId = null, ?int $languageId = null): string
     {
         $this->storeInDatabase();
-        return rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/?' . self::PARAMETER_NAME . '=' . $this->hash;
+
+        if ($pageId !== null) {
+            return $this->getPreviewUrlForPage($pageId, $languageId);
+        } else {
+            return rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/?' . self::PARAMETER_NAME . '=' . $this->hash;
+        }
     }
 
     protected function storeInDatabase(): void
@@ -51,5 +57,17 @@ class PreviewUriBuilder
                     ])
                 ]
             );
+    }
+
+    private function getPreviewUrlForPage(int $pageId, ?int $languageId): string
+    {
+        $siteRouter = $this->sitePreview->getSite()->getRouter();
+        $languageId = $languageId ?? 0;
+        $queryParameters = [
+            '_language' => $languageId,
+            self::PARAMETER_NAME => $this->hash
+        ];
+
+        return (string)$siteRouter->generateUri($pageId, $queryParameters, '', RouterInterface::ABSOLUTE_URL);
     }
 }

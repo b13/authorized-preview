@@ -71,11 +71,9 @@ class SitePreview
         return $this->lifeTime;
     }
 
-    public function getPreviewUrl(): string
+    public function getPreviewUrl(?int $pageId = null, ?int $languageId = null): string
     {
-        if (empty($this->previewUrl)) {
-            $this->generatePreviewUrl();
-        }
+        $this->generatePreviewUrl($pageId, $languageId);
         return $this->previewUrl;
     }
 
@@ -84,9 +82,9 @@ class SitePreview
         return $this->valid;
     }
 
-    protected function generatePreviewUrl(): void
+    protected function generatePreviewUrl(?int $pageId = null, ?int $languageId = null): void
     {
-        $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl();
+        $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl($pageId, $languageId);
     }
 
     protected function calculateLifetime(array $lifetime): void
