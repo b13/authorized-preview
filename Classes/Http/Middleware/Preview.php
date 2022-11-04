@@ -11,6 +11,7 @@ namespace B13\AuthorizedPreview\Http\Middleware;
  */
 
 use B13\AuthorizedPreview\Authentication\PreviewUserAuthentication;
+use B13\AuthorizedPreview\Preview\Config;
 use B13\AuthorizedPreview\Preview\PreviewUriBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -31,6 +32,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class Preview implements MiddlewareInterface
 {
+    public const REQUEST_ATTRIBUTE = 'tx_authorized_preview_config';
+
     protected Context $context;
 
     public function __construct(Context $context)
@@ -63,9 +66,16 @@ class Preview implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        if (!$this->verifyHash($hash, $language, $site)) {
+        $config = $this->getConfig($hash);
+        if ($config === null) {
             return $handler->handle($request);
         }
+        if (!$config->validForSiteAndLanguage($site, $language)) {
+            return $handler->handle($request);
+        }
+        // Store config in request
+        $request = $request->withAttribute(self::REQUEST_ATTRIBUTE, $config);
+
         $this->initializePreviewUser($language);
         $response = $handler->handle($request);
 
@@ -121,7 +131,7 @@ class Preview implements MiddlewareInterface
      * Looks for the hash in the table tx_authorized_preview
      * Must not be expired yet.
      */
-    protected function verifyHash(string $hash, SiteLanguage $language, Site $site): bool
+    protected function getConfig(string $hash): ?Config
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_authorized_preview');
@@ -145,12 +155,10 @@ class Preview implements MiddlewareInterface
             ->execute()
             ->fetch();
 
-        if (empty($row)) {
-            return false;
+        if (empty($row) || empty($row['config'])) {
+            return null;
         }
 
-        $config = json_decode($row['config'], true);
-        return (int)$config['languageId'] === $language->getLanguageId()
-            && (!isset($config['siteIdentifier']) || (string)$config['siteIdentifier'] === $site->getIdentifier());
+        return Config::fromJsonString($row['config']);
     }
 }
