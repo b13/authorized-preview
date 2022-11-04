@@ -27,17 +27,25 @@ class PreviewUriBuilder
     {
         $this->sitePreview = $sitePreview;
         $this->hash = md5(uniqid(microtime(), true));
+
+        $this->storeInDatabase();
     }
 
-    public function generatePreviewUrl(?int $pageId = null, ?int $languageId = null): string
+    public function generatePreviewUrl(): string
     {
-        $this->storeInDatabase();
+        return rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/?' . self::PARAMETER_NAME . '=' . $this->hash;
+    }
 
-        if ($pageId !== null) {
-            return $this->getPreviewUrlForPage($pageId, $languageId);
-        } else {
-            return rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/?' . self::PARAMETER_NAME . '=' . $this->hash;
-        }
+    public function generatePreviewUrlForPage(int $pageId, ?int $languageId = null): string
+    {
+        $siteRouter = $this->sitePreview->getSite()->getRouter();
+        $languageId = $languageId ?? 0;
+        $queryParameters = [
+            '_language' => $languageId,
+            self::PARAMETER_NAME => $this->hash
+        ];
+
+        return (string)$siteRouter->generateUri($pageId, $queryParameters, '', RouterInterface::ABSOLUTE_URL);
     }
 
     protected function storeInDatabase(): void
@@ -57,17 +65,5 @@ class PreviewUriBuilder
                     ])
                 ]
             );
-    }
-
-    private function getPreviewUrlForPage(int $pageId, ?int $languageId): string
-    {
-        $siteRouter = $this->sitePreview->getSite()->getRouter();
-        $languageId = $languageId ?? 0;
-        $queryParameters = [
-            '_language' => $languageId,
-            self::PARAMETER_NAME => $this->hash
-        ];
-
-        return (string)$siteRouter->generateUri($pageId, $queryParameters, '', RouterInterface::ABSOLUTE_URL);
     }
 }

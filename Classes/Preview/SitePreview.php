@@ -22,15 +22,13 @@ class SitePreview
 {
     protected bool $valid = false;
     protected ?Site $site = null;
+    protected PreviewUriBuilder $previewUriBuilder;
 
     /** The language ID for the Preview URL */
     protected int $languageId = -1;
 
     /** Time until the preview URl expires */
     protected int $lifeTime = 604800;
-
-    /** The final preview URL */
-    protected string $previewUrl = '';
 
     public function __construct(int $languageId, string $identifier, array $lifetime = [])
     {
@@ -40,7 +38,9 @@ class SitePreview
                 $this->languageId = $languageId;
                 $this->site = $site;
                 $this->calculateLifetime($lifetime);
-                $this->generatePreviewUrl();
+
+                $this->previewUriBuilder = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this);
+
                 $this->valid = true;
             }
         } catch (SiteNotFoundException $e) {
@@ -71,20 +71,19 @@ class SitePreview
         return $this->lifeTime;
     }
 
-    public function getPreviewUrl(?int $pageId = null, ?int $languageId = null): string
+    public function getPreviewUrl(): string
     {
-        $this->generatePreviewUrl($pageId, $languageId);
-        return $this->previewUrl;
+        return $this->previewUriBuilder->generatePreviewUrl();
+    }
+
+    public function getPreviewUrlForPage(int $pageId, ?int $languageId = null): string
+    {
+        return $this->previewUriBuilder->generatePreviewUrlForPage($pageId, $languageId);
     }
 
     public function isValid(): bool
     {
         return $this->valid;
-    }
-
-    protected function generatePreviewUrl(?int $pageId = null, ?int $languageId = null): void
-    {
-        $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl($pageId, $languageId);
     }
 
     protected function calculateLifetime(array $lifetime): void
