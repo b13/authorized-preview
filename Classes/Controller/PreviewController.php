@@ -68,7 +68,7 @@ class PreviewController
             $sites[] = GeneralUtility::makeInstance(SiteWrapper::class, $site);
         }
         usort($sites, function (SiteWrapper $siteA, SiteWrapper $siteB) {
-            return $siteA->getCountDisabledLanguages() < $siteB->getCountDisabledLanguages();
+            return $siteA->getCountDisabledLanguages() <=> $siteB->getCountDisabledLanguages();
         });
         return $sites;
     }
