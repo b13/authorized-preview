@@ -8,6 +8,12 @@
 	</f:be.infobox>
 </f:if>
 
+<f:if condition="{error}">
+	<f:be.infobox title="Error while trying to create Preview URL" state="2" iconName="link">
+		<p>Reason: {error}</p>
+	</f:be.infobox>
+</f:if>
+
 <h1>Generate a preview URL to a disabled language</h1>
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
@@ -48,7 +54,7 @@
 										</div>
 
 										<div class="card-content">
-											<form action="{f:be.uri(route:'site_previews', parameters: {languageId: disabledLanguage.languageId, identifier: site.site.identifier})}"
+											<form action="{f:be.uri(route:'site_previews', parameters: {languageId: disabledLanguage.languageId, identifier: site.site.identifier, pageId:pageId})}"
 												  method="post"
 												  enctype="multipart/form-data"
 												  name="demand"
@@ -70,6 +76,12 @@
 														<option value="day">Day(s)</option>
 													</select>
 												</div>
+												<f:if condition="{pageId}">
+													<br /><br />
+													<div class="form-group">
+														<p><label><input type="checkbox" name="restrictToPage" value="1">&nbsp;Restrict to selected page ({pageId})</label></p>
+													</div>
+												</f:if>
 												<br /><br />
 												<div class="form-group">
 													<button

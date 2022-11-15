@@ -11,6 +11,7 @@ namespace B13\AuthorizedPreview\Controller;
  * of the License, or any later version.
  */
 
+use B13\AuthorizedPreview\Preview\Exception\SiteMismatchException;
 use B13\AuthorizedPreview\Preview\SitePreview;
 use B13\AuthorizedPreview\SiteWrapper;
 use Psr\Http\Message\ResponseInterface;
@@ -44,11 +45,20 @@ class PreviewController
 
     public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
-        $this->view->assign('sites', $this->getAllSites());
+        $this->view->assignMultiple(
+            [
+                'sites' => $this->getAllSites(),
+                'pageId' => $request->getQueryParams()['id'] ?? 0
+            ]
+        );
 
-        $sitePreview = SitePreview::createFromRequest($request);
-        if ($sitePreview->isValid()) {
-            $this->view->assign('sitePreview', $sitePreview);
+        try {
+            $sitePreview = SitePreview::createFromRequest($request);
+            if ($sitePreview->isValid()) {
+                $this->view->assign('sitePreview', $sitePreview);
+            }
+        } catch (SiteMismatchException $exception) {
+            $this->view->assign('error', $exception->getMessage());
         }
 
         $this->moduleTemplate->setContent($this->view->render());

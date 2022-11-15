@@ -10,6 +10,7 @@ namespace B13\AuthorizedPreview\Preview;
  * of the License, or any later version.
  */
 
+use B13\AuthorizedPreview\Preview\Exception\SiteMismatchException;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -22,6 +23,7 @@ class SitePreview
 {
     protected bool $valid = false;
     protected ?Site $site = null;
+    protected ?int $pageId = null;
 
     /** The language ID for the Preview URL */
     protected int $languageId = -1;
@@ -32,13 +34,27 @@ class SitePreview
     /** The final preview URL */
     protected string $previewUrl = '';
 
-    public function __construct(int $languageId, string $identifier, array $lifetime = [])
+    public function __construct(int $languageId, string $identifier, array $lifetime = [], ?int $pageId = null)
     {
         try {
-            $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByIdentifier($identifier);
+            $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+            $site = $siteFinder->getSiteByIdentifier($identifier);
             if ($languageId > -1) {
+                if ($pageId > 0) {
+                    $pageSite = $siteFinder->getSiteByPageId($pageId);
+                    if ($pageSite->getIdentifier() !== $site->getIdentifier()) {
+                        throw new SiteMismatchException(
+                            sprintf(
+                                'PageId %s is not found in site: "%s"',
+                                $pageId,
+                                $site->getIdentifier()
+                            )
+                        );
+                    }
+                }
                 $this->languageId = $languageId;
                 $this->site = $site;
+                $this->pageId = $pageId;
                 $this->calculateLifetime($lifetime);
                 $this->generatePreviewUrl();
                 $this->valid = true;
@@ -53,7 +69,12 @@ class SitePreview
         $languageId = (int)($request->getQueryParams()['languageId'] ?? $request->getParsedBody()['languageId'] ?? -1);
         $identifier = $request->getQueryParams()['identifier'] ?? $request->getParsedBody()['identifier'] ?? '';
         $lifetime = $request->getQueryParams()['lifetime'] ?? $request->getParsedBody()['lifetime'] ?? [];
-        return new self($languageId, $identifier, $lifetime);
+        if ($request->getParsedBody()['restrictToPage'] ?? false) {
+            $pageId = (int)($request->getQueryParams()['pageId'] ?? $request->getParsedBody()['pageId'] ?? null);
+        } else {
+            $pageId = null;
+        }
+        return new self($languageId, $identifier, $lifetime, $pageId);
     }
 
     public function getLanguage(): SiteLanguage
@@ -71,11 +92,9 @@ class SitePreview
         return $this->lifeTime;
     }
 
-    public function getPreviewUrl(): string
+    public function getPreviewUrl(?int $pageId = null): string
     {
-        if (empty($this->previewUrl)) {
-            $this->generatePreviewUrl();
-        }
+        $this->generatePreviewUrl($pageId ?? $this->pageId);
         return $this->previewUrl;
     }
 
@@ -84,9 +103,9 @@ class SitePreview
         return $this->valid;
     }
 
-    protected function generatePreviewUrl(): void
+    protected function generatePreviewUrl(?int $pageId = null): void
     {
-        $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl();
+        $this->previewUrl = GeneralUtility::makeInstance(PreviewUriBuilder::class, $this)->generatePreviewUrl($pageId);
     }
 
     protected function calculateLifetime(array $lifetime): void

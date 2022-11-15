@@ -13,6 +13,7 @@ namespace B13\AuthorizedPreview\Preview;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Routing\RouterInterface;
 
 class PreviewUriBuilder
 {
@@ -28,13 +29,13 @@ class PreviewUriBuilder
         $this->hash = md5(uniqid(microtime(), true));
     }
 
-    public function generatePreviewUrl(): string
+    public function generatePreviewUrl(?int $pageId = null): string
     {
-        $this->storeInDatabase();
-        return rtrim((string)$this->sitePreview->getLanguage()->getBase(), '/') . '/?' . self::PARAMETER_NAME . '=' . $this->hash;
+        $this->storeInDatabase($pageId);
+        return $this->getPreviewUrlForPage($pageId ?? $this->sitePreview->getSite()->getRootPageId());
     }
 
-    protected function storeInDatabase(): void
+    protected function storeInDatabase(?int $pageId = null): void
     {
         $context = GeneralUtility::makeInstance(Context::class);
         GeneralUtility::makeInstance(ConnectionPool::class)
@@ -46,10 +47,22 @@ class PreviewUriBuilder
                     'tstamp' => $context->getPropertyFromAspect('date', 'timestamp'),
                     'endtime' => $context->getPropertyFromAspect('date', 'timestamp') + $this->sitePreview->getLifetime(),
                     'config' => json_encode([
-                        'siteIdentifier' => $this->sitePreview->getSite()->getIdentifier(),
-                        'languageId' => $this->sitePreview->getLanguage()->getLanguageId(),
+                        Config::CONFIG_KEY_SITE => $this->sitePreview->getSite()->getIdentifier(),
+                        Config::CONFIG_KEY_LANGUAGE => $this->sitePreview->getLanguage()->getLanguageId(),
+                        Config::CONFIG_KEY_PAGE => $pageId ?? 0,
                     ])
                 ]
             );
+    }
+
+    private function getPreviewUrlForPage(int $pageId): string
+    {
+        $siteRouter = $this->sitePreview->getSite()->getRouter();
+        $queryParameters = [
+            '_language' => $this->sitePreview->getLanguage()->getLanguageId(),
+            self::PARAMETER_NAME => $this->hash
+        ];
+
+        return (string)$siteRouter->generateUri((string)$pageId, $queryParameters, '', RouterInterface::ABSOLUTE_URL);
     }
 }
