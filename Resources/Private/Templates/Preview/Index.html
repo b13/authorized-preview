@@ -53,15 +53,16 @@
 											</div>
 										</div>
 
-										<div class="card-content">
+										<div class="card-body">
 											<form action="{f:be.uri(route:'site_previews', parameters: {languageId: disabledLanguage.languageId, identifier: site.site.identifier, pageId:pageId})}"
 												  method="post"
 												  enctype="multipart/form-data"
 												  name="demand"
 												  class="form-inline form-inline-spaced">
-												<div class="form-group">
-													<p><label>URL Lifetime:</label><br /></p>
-												</div>
+
+												<p>
+													<label>URL Lifetime:</label><br />
+												</p>
 												<div class="form-group">
 													<select class="form-control" name="lifetime[amount]">
 														<option value="1">1</option>

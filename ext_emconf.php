@@ -9,10 +9,10 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Daniel Goerz',
     'author_email' => 'daniel.goerz@b13.com',
     'author_company' => 'b13 GmbH',
-    'version' => '2.1.0',
+    'version' => '3.0.0',
     'constraints' => [
         'depends' => [
-            'typo3' => '10.4.0-11.5.99'
+            'typo3' => '11.5.0-12.4.99'
         ],
         'conflicts' => [],
         'suggests' => [],

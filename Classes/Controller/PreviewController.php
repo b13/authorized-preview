@@ -16,8 +16,9 @@ use B13\AuthorizedPreview\Preview\SitePreview;
 use B13\AuthorizedPreview\SiteWrapper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Backend\Template\ModuleTemplate;
+use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -25,13 +26,13 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class PreviewController
 {
-    protected ModuleTemplate $moduleTemplate;
     protected StandaloneView $view;
     protected SiteFinder $siteFinder;
+    private ModuleTemplateFactory $moduleTemplateFactory;
 
-    public function __construct(ModuleTemplate $moduleTemplate, SiteFinder $siteFinder)
+    public function __construct(ModuleTemplateFactory $moduleTemplateFactory, SiteFinder $siteFinder)
     {
-        $this->moduleTemplate = $moduleTemplate;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
         $this->siteFinder = $siteFinder;
         $this->initializeView('index');
     }
@@ -61,8 +62,9 @@ class PreviewController
             $this->view->assign('error', $exception->getMessage());
         }
 
-        $this->moduleTemplate->setContent($this->view->render());
-        return new HtmlResponse($this->moduleTemplate->renderContent());
+        $moduleTemplate = $this->moduleTemplateFactory->create($this->getRequest());
+        $moduleTemplate->setContent($this->view->render());
+        return new HtmlResponse($moduleTemplate->renderContent());
     }
 
     /**
@@ -81,5 +83,10 @@ class PreviewController
             return $siteA->getCountDisabledLanguages() <=> $siteB->getCountDisabledLanguages();
         });
         return $sites;
+    }
+
+    protected function getRequest(): ServerRequest
+    {
+        return $GLOBALS['TYPO3_REQUEST'];
     }
 }
