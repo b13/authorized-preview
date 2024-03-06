@@ -47,4 +47,9 @@ class Config
     {
         return $pageId === $this->pageId;
     }
+
+    public function getPageId(): int
+    {
+        return $this->pageId;
+    }
 }

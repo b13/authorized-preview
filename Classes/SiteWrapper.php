@@ -10,6 +10,7 @@ namespace B13\AuthorizedPreview;
  * of the License, or any later version.
  */
 
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
@@ -27,12 +28,13 @@ class SiteWrapper
      */
     protected array $disabledLanguages = [];
 
-    public function __construct(Site $site)
+    public function __construct(Site $site, ExtensionConfiguration $extensionConfiguration)
     {
         $this->site = $site;
-
+        $showPreviewForEnabledLanguages = (bool)$extensionConfiguration->get('authorized_preview',
+            'showPreviewForEnabledLanguages');
         foreach ($this->site->getAllLanguages() as $languageId => $language) {
-            if ($language->enabled() === false) {
+            if ($showPreviewForEnabledLanguages || $language->enabled() === false) {
                 $this->disabledLanguages[] = $language;
             }
         }

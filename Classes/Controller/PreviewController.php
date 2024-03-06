@@ -17,6 +17,7 @@ use B13\AuthorizedPreview\SiteWrapper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -28,12 +29,15 @@ class PreviewController
 {
     protected StandaloneView $view;
     protected SiteFinder $siteFinder;
+    protected ExtensionConfiguration $extensionConfiguration;
     private ModuleTemplateFactory $moduleTemplateFactory;
 
-    public function __construct(ModuleTemplateFactory $moduleTemplateFactory, SiteFinder $siteFinder)
+    public function __construct(ModuleTemplateFactory $moduleTemplateFactory, SiteFinder $siteFinder,
+        ExtensionConfiguration $extensionConfiguration)
     {
         $this->moduleTemplateFactory = $moduleTemplateFactory;
         $this->siteFinder = $siteFinder;
+        $this->extensionConfiguration = $extensionConfiguration;
         $this->initializeView('index');
     }
 
@@ -77,7 +81,8 @@ class PreviewController
             if (!($site instanceof Site)) {
                 continue;
             }
-            $sites[] = GeneralUtility::makeInstance(SiteWrapper::class, $site);
+            $sites[] = GeneralUtility::makeInstance(SiteWrapper::class, $site,
+                $this->extensionConfiguration);
         }
         usort($sites, function (SiteWrapper $siteA, SiteWrapper $siteB) {
             return $siteA->getCountDisabledLanguages() <=> $siteB->getCountDisabledLanguages();
