@@ -19,6 +19,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\UserAspect;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -36,9 +37,12 @@ class Preview implements MiddlewareInterface
 
     protected Context $context;
 
-    public function __construct(Context $context)
+    protected array $extConf;
+
+    public function __construct(Context $context, ExtensionConfiguration $extensionConfiguration)
     {
         $this->context = $context;
+        $this->extConf = $extensionConfiguration->get('authorized_preview');
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -57,8 +61,10 @@ class Preview implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        if ($language->isEnabled()) {
-            return $handler->handle($request);
+        if (!($this->extConf['showPreviewForEnabledLanguages'] ?? false)) {
+            if ($language->isEnabled()) {
+                return $handler->handle($request);
+            }
         }
 
         $hash = $this->findHashInRequest($request);
@@ -76,7 +82,11 @@ class Preview implements MiddlewareInterface
         // Store config in request
         $request = $request->withAttribute(self::REQUEST_ATTRIBUTE, $config);
 
-        $this->initializePreviewUser($language);
+        $pageId = $config->getPageId();
+
+        if (!$this->initializePreviewUser($language, $pageId)) {
+            return $handler->handle($request);
+        }
         $response = $handler->handle($request);
 
         // If the GET parameter PreviewUriBuilder::PARAMETER_NAME is set, then a cookie is set for the next request
@@ -108,12 +118,21 @@ class Preview implements MiddlewareInterface
     /**
      * Creates a preview user and sets the current page ID (for accessing the page)
      */
-    protected function initializePreviewUser(SiteLanguage $language): void
+    protected function initializePreviewUser(SiteLanguage $language, int $pageId = 0): bool
     {
         $previewUser = GeneralUtility::makeInstance(PreviewUserAuthentication::class, $language);
-        $previewUser->setWebmounts([$GLOBALS['TSFE']->id]);
+        if (!$pageId) {
+            if (isset($GLOBALS['TSFE'])) {
+                $pageId = $GLOBALS['TSFE']->id;
+            }
+        }
+        if (!$pageId) {
+            return false;
+        }
+        $previewUser->setWebmounts([$pageId]);
         $GLOBALS['BE_USER'] = $previewUser;
         $this->setBackendUserAspect($previewUser);
+        return true;
     }
 
     /**

@@ -1,0 +1,2 @@
+# cat=basic; type=bool; label=If this is enabled, it is also possible to show preview URLS for enabled languages
+showPreviewForEnabledLanguages = 0
