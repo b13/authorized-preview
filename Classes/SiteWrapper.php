@@ -31,9 +31,10 @@ class SiteWrapper
     public function __construct(Site $site, ExtensionConfiguration $extensionConfiguration)
     {
         $this->site = $site;
-        $showPreviewForEnabledLanguages = (bool)$extensionConfiguration->get('authorized_preview', 'showPreviewForEnabledLanguages');
+        $showPreviewForEnabledLanguages = (bool)$extensionConfiguration->get('authorized_preview',
+            'showPreviewForEnabledLanguages');
         foreach ($this->site->getAllLanguages() as $languageId => $language) {
-            if ($showPreviewForEnabledLanguages && $language->enabled() === false) {
+            if ($showPreviewForEnabledLanguages || $language->enabled() === false) {
                 $this->disabledLanguages[] = $language;
             }
         }
