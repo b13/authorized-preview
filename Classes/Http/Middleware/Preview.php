@@ -20,6 +20,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\Exception\AspectNotFoundException;
 use TYPO3\CMS\Core\Context\UserAspect;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\NormalizedParams;
@@ -34,16 +35,15 @@ class Preview implements MiddlewareInterface
 {
     public const REQUEST_ATTRIBUTE = 'tx_authorized_preview_config';
 
-    protected Context $context;
-
-    public function __construct(Context $context)
-    {
-        $this->context = $context;
-    }
+    public function __construct(protected readonly Context $context) {}
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if ($this->context->getPropertyFromAspect('backend.user', 'isLoggedIn')) {
+        try {
+            if ($this->context->getPropertyFromAspect('backend.user', 'isLoggedIn')) {
+                return $handler->handle($request);
+            }
+        } catch (AspectNotFoundException $e) {
             return $handler->handle($request);
         }
 
@@ -73,10 +73,11 @@ class Preview implements MiddlewareInterface
         if (!$config->validForSiteAndLanguage($site, $language)) {
             return $handler->handle($request);
         }
+
         // Store config in request
         $request = $request->withAttribute(self::REQUEST_ATTRIBUTE, $config);
 
-        $this->initializePreviewUser($language);
+        $this->initializePreviewUser($language, $site);
         $response = $handler->handle($request);
 
         // If the GET parameter PreviewUriBuilder::PARAMETER_NAME is set, then a cookie is set for the next request
@@ -84,13 +85,11 @@ class Preview implements MiddlewareInterface
             /** @var NormalizedParams $normalizedParams */
             $normalizedParams = $request->getAttribute('normalizedParams');
             $cookie = new Cookie(
-                PreviewUriBuilder::PARAMETER_NAME,
-                $hash,
-                0,
-                $normalizedParams->getSitePath(),
-                '',
-                true,
-                true
+                name: PreviewUriBuilder::PARAMETER_NAME,
+                value: $hash,
+                path: $normalizedParams->getSitePath(),
+                secure: true,
+                httpOnly: true
             );
             return $response->withAddedHeader('Set-Cookie', $cookie->__toString());
         }
@@ -108,10 +107,10 @@ class Preview implements MiddlewareInterface
     /**
      * Creates a preview user and sets the current page ID (for accessing the page)
      */
-    protected function initializePreviewUser(SiteLanguage $language): void
+    protected function initializePreviewUser(SiteLanguage $language, Site $site): void
     {
         $previewUser = GeneralUtility::makeInstance(PreviewUserAuthentication::class, $language);
-        $previewUser->setWebmounts([$GLOBALS['TSFE']->id]);
+        $previewUser->setWebmounts([$site->getRootPageId()]);
         $GLOBALS['BE_USER'] = $previewUser;
         $this->setBackendUserAspect($previewUser);
     }
@@ -152,8 +151,8 @@ class Preview implements MiddlewareInterface
                 )
             )
             ->setMaxResults(1)
-            ->execute()
-            ->fetch();
+            ->executeQuery()
+            ->fetchAssociative();
 
         if (empty($row) || empty($row['config'])) {
             return null;
