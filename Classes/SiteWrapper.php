@@ -1,5 +1,6 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
 namespace B13\AuthorizedPreview;
 
 /*
@@ -13,34 +14,26 @@ namespace B13\AuthorizedPreview;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
-/**
- * Class SiteWrapper
- *
- * Wrapper class for easy access to disabled languages
- */
+/** Wrapper class for easy access to disabled languages */
 class SiteWrapper
 {
     protected Site $site;
 
-    /**
-     * @var SiteLanguage[]
-     */
+    /** @var SiteLanguage[] */
     protected array $disabledLanguages = [];
 
     public function __construct(Site $site)
     {
         $this->site = $site;
 
-        foreach ($this->site->getAllLanguages() as $languageId => $language) {
+        foreach ($this->site->getAllLanguages() as $language) {
             if ($language->enabled() === false) {
                 $this->disabledLanguages[] = $language;
             }
         }
     }
 
-    /**
-     * @return SiteLanguage[]
-     */
+    /** @return SiteLanguage[] */
     public function getDisabledLanguages(): array
     {
         return $this->disabledLanguages;

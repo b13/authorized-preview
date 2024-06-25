@@ -5,7 +5,7 @@ through generated preview URLs without the need for a backend login.
 
 ## Requirements
 
-* TYPO3 v10 LTS or TYPO3 v11 LTS
+* TYPO3 v12 LTS (For earlier versions of TYPO3 use v2 or v3)
 
 ## Installation and Setup
 Install the extension via your preferred way. The extension will add one database table to the database.

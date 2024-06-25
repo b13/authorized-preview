@@ -5,7 +5,7 @@
 	"description": "Generate URLs to preview hidden languages without a backend login",
 	"require": {
 		"php": "^8.1",
-		"typo3/cms-core": "^11.5 || ^12.4"
+		"typo3/cms-core": "^12.4"
 	},
 	"extra": {
 		"typo3/cms": {

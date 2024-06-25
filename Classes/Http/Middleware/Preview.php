@@ -1,5 +1,6 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
 namespace B13\AuthorizedPreview\Http\Middleware;
 
 /*
@@ -35,7 +36,9 @@ class Preview implements MiddlewareInterface
 {
     public const REQUEST_ATTRIBUTE = 'tx_authorized_preview_config';
 
-    public function __construct(protected readonly Context $context) {}
+    public function __construct(protected readonly Context $context)
+    {
+    }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {

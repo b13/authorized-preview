@@ -1,5 +1,6 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
 namespace B13\AuthorizedPreview\Preview;
 
 /*
@@ -12,8 +13,8 @@ namespace B13\AuthorizedPreview\Preview;
 
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Routing\RouterInterface;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class PreviewUriBuilder
 {
@@ -50,7 +51,7 @@ class PreviewUriBuilder
                         Config::CONFIG_KEY_SITE => $this->sitePreview->getSite()->getIdentifier(),
                         Config::CONFIG_KEY_LANGUAGE => $this->sitePreview->getLanguage()->getLanguageId(),
                         Config::CONFIG_KEY_PAGE => $pageId ?? 0,
-                    ])
+                    ]),
                 ]
             );
     }
@@ -60,7 +61,7 @@ class PreviewUriBuilder
         $siteRouter = $this->sitePreview->getSite()->getRouter();
         $queryParameters = [
             '_language' => $this->sitePreview->getLanguage()->getLanguageId(),
-            self::PARAMETER_NAME => $this->hash
+            self::PARAMETER_NAME => $this->hash,
         ];
 
         return (string)$siteRouter->generateUri((string)$pageId, $queryParameters, '', RouterInterface::ABSOLUTE_URL);
