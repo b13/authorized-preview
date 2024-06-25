@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace B13\AuthorizedPreview\Controller;
@@ -15,61 +16,54 @@ use B13\AuthorizedPreview\Preview\Exception\SiteMismatchException;
 use B13\AuthorizedPreview\Preview\SitePreview;
 use B13\AuthorizedPreview\SiteWrapper;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Http\HtmlResponse;
-use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\View\StandaloneView;
+use TYPO3\CMS\Core\View\ViewInterface;
+use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 
-class PreviewController
+class PreviewController extends ActionController
 {
-    protected StandaloneView $view;
-    protected SiteFinder $siteFinder;
-    private ModuleTemplateFactory $moduleTemplateFactory;
+    protected ViewInterface $moduleView;
+    protected ModuleTemplate $moduleTemplate;
 
-    public function __construct(ModuleTemplateFactory $moduleTemplateFactory, SiteFinder $siteFinder)
-    {
-        $this->moduleTemplateFactory = $moduleTemplateFactory;
-        $this->siteFinder = $siteFinder;
-        $this->initializeView('index');
+    public function __construct(
+        protected readonly ModuleTemplateFactory $moduleTemplateFactory,
+        protected readonly SiteFinder $siteFinder
+    ) {
     }
 
-    protected function initializeView(string $templateName): void
+    protected function initializeIndexAction(): void
     {
-        $this->view = GeneralUtility::makeInstance(StandaloneView::class);
-        $this->view->setTemplate($templateName);
-        $this->view->setTemplateRootPaths(['EXT:authorized_preview/Resources/Private/Templates/Preview']);
+        $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+        $this->moduleView = $this->moduleTemplate;
     }
 
-    public function indexAction(ServerRequestInterface $request): ResponseInterface
+    public function indexAction(): ResponseInterface
     {
-        $this->view->assignMultiple(
+        $this->moduleView->assignMultiple(
             [
                 'sites' => $this->getAllSites(),
-                'pageId' => $request->getQueryParams()['id'] ?? 0
+                'pageId' => $this->request->getQueryParams()['id'] ?? 0,
             ]
         );
 
         try {
-            $sitePreview = SitePreview::createFromRequest($request);
+            $sitePreview = SitePreview::createFromRequest($this->request);
             if ($sitePreview->isValid()) {
-                $this->view->assign('sitePreview', $sitePreview);
+                $this->moduleView->assign('sitePreview', $sitePreview);
             }
         } catch (SiteMismatchException $exception) {
-            $this->view->assign('error', $exception->getMessage());
+            $this->moduleView->assign('error', $exception->getMessage());
         }
 
-        $moduleTemplate = $this->moduleTemplateFactory->create($this->getRequest());
-        $moduleTemplate->setContent($this->view->render());
-        return new HtmlResponse($moduleTemplate->renderContent());
+        return new HtmlResponse($this->moduleView->render());
     }
 
-    /**
-     * @return SiteWrapper[]
-     */
+    /** @return SiteWrapper[] */
     protected function getAllSites(): array
     {
         $sites = [];
@@ -83,10 +77,5 @@ class PreviewController
             return $siteA->getCountDisabledLanguages() <=> $siteB->getCountDisabledLanguages();
         });
         return $sites;
-    }
-
-    protected function getRequest(): ServerRequest
-    {
-        return $GLOBALS['TYPO3_REQUEST'];
     }
 }

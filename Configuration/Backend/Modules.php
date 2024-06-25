@@ -11,9 +11,10 @@ return [
         'iconIdentifier' => 'b13-preview',
         'labels' => 'LLL:EXT:authorized_preview/Resources/Private/Language/locallang_module.xlf',
         'navigationComponent' => '@typo3/backend/page-tree/page-tree-element',
-        'routes' => [
-            '_default' => [
-                'target' => \B13\AuthorizedPreview\Controller\PreviewController::class . '::indexAction',
+        'extensionName' => 'authorized_preview',
+        'controllerActions' => [
+            \B13\AuthorizedPreview\Controller\PreviewController::class => [
+                'index',
             ],
         ],
     ],

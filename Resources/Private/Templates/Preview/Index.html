@@ -1,5 +1,9 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" xmlns:c="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers" data-namespace-typo3-fluid="true">
 
+<f:layout name="Module" />
+
+<f:section name="Content">
+
 <f:if condition="{sitePreview}">
 	<f:be.infobox title="Created preview URL for {sitePreview.language.title} on {sitePreview.site.base.host}" state="0" iconName="link">
 		<h4><strong>{sitePreview.previewUrl}</strong></h4>
@@ -107,5 +111,6 @@
 		</div>
 	</f:for>
 </div>
+</f:section>
 
 </html>
