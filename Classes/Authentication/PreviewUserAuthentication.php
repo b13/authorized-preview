@@ -49,9 +49,10 @@ class PreviewUserAuthentication extends BackendUserAuthentication
      * Has read permissions on the whole workspace, but nothing else
      *
      * @param array $row
+     * @param bool $useDeleteClause
      * @return int
      */
-    public function calcPerms($row): int
+    public function calcPerms($row, bool $useDeleteClause = true): int
     {
         return Permission::PAGE_SHOW;
     }
